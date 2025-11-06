@@ -24,12 +24,7 @@ enum class ImageResourcesType(val path: String, val fileType: String) {
 
     val traitSkillIdRegex = "[0-9]+".toRegex()
     fun getGeneralPath(name: String): String {
-        var type = name
-        if (this == TraitSkillGroup && traitSkillIdRegex.matches(name)) {
-            val traitSkill = runBlocking { EternalReturnDakGGApiClient.getTraitSkills() }
-            type = traitSkill.traitSkills.first { it.id == name.toLong() }.group
-        }
-        return "/resources/images${this.path}$type${this.fileType}"
+        return "/resources/images${this.path}$name${this.fileType}"
     }
 
     companion object {
