@@ -1,5 +1,4 @@
 # EternalReturnResource
-if 
 
 ## You may need to know  
 The image mapping relationship is located in most files in the data directory. The key represents the unique ID of the item    
@@ -22,9 +21,8 @@ enum class ImageResourcesType(val path: String, val fileType: String) {
     TraitSkillGroup("/trait/group/", ".png");
 
 
-    val traitSkillIdRegex = "[0-9]+".toRegex()
-    fun getGeneralPath(name: String): String {
-        return "/resources/images${this.path}$name${this.fileType}"
+    fun getGeneralPath(id: String): String {
+        return "/resources/images${this.path}$id${this.fileType}"
     }
 
     companion object {
