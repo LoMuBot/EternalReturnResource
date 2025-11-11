@@ -33,8 +33,13 @@ jobs:
       id: stats_and_stage
       run: |
         echo "🔄 Staging files and calculating stats..."
+       
+        if [ -d "./resources/cache" ]; then
+          echo "🗑️ Removing cache directory contents..."
+          rm -rf ./resources/cache
+        fi
+        
         git add -A
-        git reset resources/cache/
   
         if [ -d "./resources" ]; then
           PNG_COUNT=$(find ./resources -name "*.png" | wc -l)
