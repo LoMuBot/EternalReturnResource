@@ -23,73 +23,20 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
-
-    - name: Find and verify JAR file
-      id: find_jar
-      run: |
-        echo "🔍 Searching for JAR files..."
-        # 查找非 .git 目录下的所有 jar 文件，并取第一个
-        JAR_FILES=$(find . -name "*.jar" -type f ! -path "./.git/*" | head -5)
-        if [ -z "$JAR_FILES" ]; then
-          echo "❌ No JAR files found in repository"
-          exit 1
-        fi
-        
-        echo "✅ Found JAR files:"
-        echo "$JAR_FILES"
-        
-        # 选择第一个JAR文件
-        MAIN_JAR=$(echo "$JAR_FILES" | head -1)
-        echo "main_jar=$MAIN_JAR" >> $GITHUB_OUTPUT
-        echo "📦 Using JAR: $MAIN_JAR"
-
     - name: Run resource downloader JAR
       run: |
         echo "🚀 Starting EternalReturn resource download..."
         echo "JAR Path: ${{ steps.find_jar.outputs.main_jar }}"
-        
-        # 运行JAR程序
         java -jar "${{ steps.find_jar.outputs.main_jar }}" || echo "⚠️ JAR execution completed"
-        
         echo "✅ Resource download process finished"
-
-    - name: Show downloaded resources summary
-      id: show_summary
-      run: |
-        echo "📊 Downloaded resources summary:"
-        
-        # 检查resources目录
-        if [ -d "./resources" ]; then
-          echo "=== Resources Directory Structure ==="
-          # 显示前50个文件
-          find ./resources -type f | head -50 | while read file; do
-            size=$(stat -c%s "$file" 2>/dev/null || echo "unknown")
-            echo "📄 $file ($(numfmt --to=iec $size 2>/dev/null || echo 'unknown size'))"
-          done
-          
-          echo ""
-          echo "=== File Count by Type ==="
-          echo "📈 PNG images: $(find ./resources -name "*.png" | wc -l)"
-          echo "📊 JSON files: $(find ./resources -name "*.json" | wc -l)"
-          echo "📁 Total files: $(find ./resources -type f | wc -l)"
-        else
-          echo "❌ Resources directory not found"
-        fi
-        
-        echo ""
-        echo "=== Git Status ==="
-        git status --short
-
-    # ✨ 优化点 1: 独立进行 Git 暂存和资源统计，将数据写入环境变量 (ENV)
     - name: Calculate resource stats and stage files
       id: stats_and_stage
       run: |
         echo "🔄 Staging files and calculating stats..."
         
-        # 暂存所有文件（包括新下载的 resources 目录）
         git add -A
         
-        # 计算资源统计数据
+  
         if [ -d "./resources" ]; then
           PNG_COUNT=$(find ./resources -name "*.png" | wc -l)
           JSON_COUNT=$(find ./resources -name "*.json" | wc -l)
@@ -108,14 +55,12 @@ jobs:
         
         echo "✅ Stats calculated and files staged."
 
-    # 移除原有的 Configure Git for auto-commit 步骤
-
-    # ✨ 优化点 2: 使用 git-auto-commit-action 替换复杂的脚本
+    
     - name: Commit and push downloaded resources (Optimized)
       id: auto_commit
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        # 使用上一步设置的环境变量来生成详细的提交信息
+    
         commit_message: |
           Auto-update: EternalReturn Resources ${{ env.COMMIT_DATE }}
 
@@ -139,14 +84,12 @@ jobs:
           🆔 Run ID: ${{ github.run_id }}
         commit_user_name: github-actions[bot]
         commit_user_email: github-actions[bot]@users.noreply.github.com
-        # 该 Action 会自动检查是否有变化，没有变化则跳过提交和推送
-
-    # ✨ 优化点 3: 更新 Workflow summary 依赖 auto_commit 的输出
+      
     - name: Workflow summary
       run: |
         echo "🎉 EternalReturn Resource Downloader Completed!"
         echo ""
-        # 检查 auto_commit Action 的输出，判断是否发生了提交
+
         if [ "${{ steps.auto_commit.outputs.changes_detected }}" == "true" ]; then
           echo "✅ 新资源已下载、暂存并提交到仓库。"
           echo "📁 请检查 'resources' 目录以查看更新文件。"
