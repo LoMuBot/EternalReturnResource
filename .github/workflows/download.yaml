@@ -21,11 +21,25 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
-        cache: 'none'
     - name: Run resource downloader JAR
       run: |
-        java -jar ./EternalReturnDownloadResources.jar
+      
+        ${{ env.JAVA_HOME_21_X64 }}/bin/java -version
+        ${{ env.JAVA_HOME_21_X64 }}/bin/java -jar "EternalReturnDownloadResources.jar"
         echo "✅ Resource download process finished"
+        
+
+    - name: Force Java version verification
+      run: |
+        JAVA_HOME=${{ env.JAVA_HOME_21_X64 }}
+        PATH=$JAVA_HOME/bin:$PATH
+        java -version
+        javac -version
+        echo "JAVA_HOME: $JAVA_HOME"
+        echo "PATH: $PATH"
+        
+        which java
+        readlink -f $(which java)
     - name: Calculate resource stats and stage files
       id: stats_and_stage
       run: |
